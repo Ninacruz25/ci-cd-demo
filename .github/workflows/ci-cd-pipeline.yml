@@ -12,7 +12,7 @@ on:
 # Variables de entorno usadas en los jobs
 env:
   NODE_VERSION: '18'
-  CACHE_KEY: node-modules-${{ hashFiles('**/package-lock.json') }}
+  CACHE_KEY: node-modules-v1
 
 # Define los jobs que se ejecutarán como parte de este workflow
 jobs:
