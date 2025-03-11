@@ -1,11 +1,16 @@
 const express = require('express');
+const path = require('path');
 const app = express();
 
-app.get('/', (req, res) => {
-  res.send('Hello CI/CD World!');
+// Servir archivos estáticos desde la carpeta public
+app.use(express.static(path.join(__dirname, '../public')));
+
+// API routes
+app.get('/api', (req, res) => {
+  res.json({ message: 'Hello CI/CD World!' });
 });
 
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
