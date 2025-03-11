@@ -50,3 +50,38 @@ jobs:
     # Paso 4: Verificar vulnerabilidades en dependencias
     - name: Run npm audit
       run: npm audit --production --audit-level=high
+
+  # ETAPA 3: Desplegar en GitHub Pages
+  deploy-to-pages:
+    name: Deploy to GitHub Pages
+    needs: [build-and-test, security-scan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+  
+    steps:
+    # Paso 1: Obtener el código
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      
+    # Paso 2: Configurar Node.js
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    # Paso 3: Instalar dependencias
+    - name: Install dependencies
+      run: npm install
+    
+    # Paso 4: Construir la aplicación si es necesario
+    - name: Build application
+      run: |
+        mkdir -p build
+        cp -r public/* build/
+    
+    # Paso 5: Desplegar a GitHub Pages
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./build
