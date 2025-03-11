@@ -38,9 +38,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.npm
-          key: ${{ env.CACHE_KEY }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ env.CACHE_KEY }}
+            ${{ runner.os }}-node-
       
       # Paso 4: Instalar dependencias
       - name: Install dependencies
