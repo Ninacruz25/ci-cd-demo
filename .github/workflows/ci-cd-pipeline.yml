@@ -1,0 +1,95 @@
+name: CI/CD Pipeline for Web Application
+
+# Define cuando este workflow se ejecutará
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  # Trigger manual
+  workflow_dispatch:
+
+# Variables de entorno usadas en los jobs
+env:
+  NODE_VERSION: '18'
+  CACHE_KEY: node-modules-${{ hashFiles('**/package-lock.json') }}
+
+# Define los jobs que se ejecutarán como parte de este workflow
+jobs:
+  # ETAPA 1: Compilar y probar la aplicación
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Paso 1: Obtener el código
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      # Paso 2: Configurar entorno Node.js
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      # Paso 3: Cachear dependencias para acelerar el workflow
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ env.CACHE_KEY }}
+          restore-keys: |
+            ${{ env.CACHE_KEY }}
+      
+      # Paso 4: Instalar dependencias
+      - name: Install dependencies
+        run: npm ci
+      
+      # Paso 5: Ejecutar linting para verificar calidad del código
+      - name: Run linting
+        run: npm run lint
+      
+      # Paso 6: Ejecutar pruebas unitarias
+      - name: Run tests
+        run: npm test
+      
+      # Paso 7: Crear un directorio build para empaquetar la aplicación
+      - name: Create build directory
+        run: |
+          mkdir -p build
+          cp -r src/* build/
+          cp package.json package-lock.json build/
+      
+      # Paso 8: Subir artefactos de build para los siguientes jobs
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: build/
+          retention-days: 1
+
+  # ETAPA 2: Ejecutar análisis de seguridad
+  security-scan:
+    name: Security Scan
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Paso 1: Obtener el código
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      # Paso 2: Configurar entorno Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      # Paso 3: Instalar dependencias
+      - name: Install dependencies
+        run: npm ci
+      
+      # Paso 4: Verificar vulnerabilidades en dependencias
+      - name: Run npm audit
+        run: npm audit --production --audit-level=high
