@@ -25,3 +25,28 @@ jobs:
       
       - name: Run tests
         run: npm test
+
+# ETAPA 2: Ejecutar análisis de seguridad
+  security-scan:
+    name: Security Scan
+    needs: build-and-test
+    runs-on: ubuntu-latest
+  
+    steps:
+    # Paso 1: Obtener el código
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    
+    # Paso 2: Configurar entorno Node.js
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    # Paso 3: Instalar dependencias
+    - name: Install dependencies
+      run: npm install
+    
+    # Paso 4: Verificar vulnerabilidades en dependencias
+    - name: Run npm audit
+      run: npm audit --production --audit-level=high
